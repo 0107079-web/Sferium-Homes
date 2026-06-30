@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  # --- Sferium React Frontend (Nginx Proxy) ---
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - sferium-mesh
+    restart: always
+
+  # --- FastAPI WebSocket Signaling Server ---
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=sferium_secure_db_pass_2026
+      - POSTGRES_DB=sferium_chat
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=sferium_super_secure_secret_hash_key_cto_level_2026
+      - DEBUG=False
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - sferium-mesh
+    restart: always
+
+  # --- Persistent Database PostgreSQL ---
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=sferium_secure_db_pass_2026
+      - POSTGRES_DB=sferium_chat
+    volumes:
+      - sferium-pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d sferium_chat"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sferium-mesh
+    restart: always
+
+  # --- High-Speed Redis Memory Cache ---
+  redis:
+    image: redis:7-alpine
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - sferium-redisdata:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - sferium-mesh
+    restart: always
+
+  # --- Monitoring Scraper (Prometheus) ---
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - sferium-mesh
+    restart: always
+
+networks:
+  sferium-mesh:
+    driver: bridge
+
+volumes:
+  sferium-pgdata:
+    driver: local
+  sferium-redisdata:
+    driver: local

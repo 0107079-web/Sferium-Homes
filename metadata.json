@@ -1,0 +1,8 @@
+{
+  "name": "Homes Sync",
+  "description": "Аналог Rave для совместного просмотра видео с YouTube, VK и Rutube с полной синхронизацией плеера и чатом для нескольких участников.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "appId": "ru.sferium.watch",
+  "appName": "Sferium",
+  "webDir": "dist",
+  "server": {
+    "allowNavigation": [
+      "*.vk.com",
+      "*.vkvideo.ru",
+      "oauth.vk.com",
+      "*.youtube.com",
+      "*.rutube.ru"
+    ]
+  }
+}
