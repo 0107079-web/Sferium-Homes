@@ -124,27 +124,6 @@ html, body, #root {
   color: #71717a !important;
 }
 
-/* Custom Plyr Theme Integration */
-:root {
-  --plyr-color-main: #6366f1; /* Indigo-500 */
-  --plyr-video-background: #09090b; /* Zinc-950 */
-  --plyr-menu-background: rgba(24, 24, 27, 0.95);
-  --plyr-menu-color: #f4f4f5;
-  --plyr-control-radius: 12px;
-  --plyr-font-family: "Inter", sans-serif;
-}
 
-.plyr--full-ui input[type=range] {
-  color: #6366f1 !important;
-}
-
-.plyr__control--overlaid {
-  background: rgba(99, 102, 241, 0.9) !important;
-}
-
-.plyr__controls {
-  font-family: "Inter", sans-serif !important;
-  font-size: 13px !important;
-}
 
 

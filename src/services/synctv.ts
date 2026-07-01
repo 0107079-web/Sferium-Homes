@@ -376,7 +376,7 @@ export class SyncTVClient {
           name: options.room,
           password: options.password || "",
           videoUrl: options.videoUrl || "",
-          videoType: options.videoType || "plyr"
+          videoType: options.videoType || "universal"
         })
       });
 

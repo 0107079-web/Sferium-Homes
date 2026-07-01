@@ -3409,9 +3409,9 @@ export default function App() {
                     title="Открыть чат"
                   >
                     <MessageSquare className="w-4 h-4" />
-                    {roomState && roomState.chatHistory.length > 0 && (
+                    {roomState && roomState.chatHistory && roomState.chatHistory.length > 0 && (
                       <span className="absolute -top-1 -right-1 bg-red-600 text-white text-[9px] font-bold px-1 py-0.5 rounded-full min-w-[14px] text-center select-none scale-75">
-                        {roomState.chatHistory.filter(m => m.type !== "system").length}
+                        {(roomState.chatHistory || []).filter(m => m.type !== "system").length}
                       </span>
                     )}
                   </button>
@@ -3441,9 +3441,9 @@ export default function App() {
                   >
                     <div className="relative">
                       <MessageSquare className="w-5 h-5" />
-                      {roomState && roomState.chatHistory.length > 0 && (
+                      {roomState && roomState.chatHistory && roomState.chatHistory.length > 0 && (
                         <span className="absolute -top-1.5 -right-1.5 bg-indigo-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-[16px] text-center select-none scale-90">
-                          {roomState.chatHistory.filter(m => m.type !== "system").length}
+                          {(roomState.chatHistory || []).filter(m => m.type !== "system").length}
                         </span>
                       )}
                     </div>

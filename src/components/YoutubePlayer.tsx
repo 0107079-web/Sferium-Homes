@@ -5,7 +5,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Play, Pause, RefreshCw, Volume2, Info, Monitor, ExternalLink, HelpCircle, Lock, LogIn, Key, Settings, CheckCircle2, LogOut, Disc, Globe } from "lucide-react";
-import Hls from "hls.js";
+import UniversalPlayer from "./UniversalPlayer";
 
 declare global {
   interface Window {
@@ -86,7 +86,6 @@ export default function YoutubePlayer({
   const playerRef = useRef<any>(null);
   const vkPlayerRef = useRef<any>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const hlsRef = useRef<Hls | null>(null);
   
   // Stable ref for the YouTube player's container to isolate it from React updates
   const ytContainerRef = useRef<HTMLDivElement>(null);
@@ -186,64 +185,7 @@ export default function YoutubePlayer({
     }
   }, [isDirectVideo]);
 
-  // Handle actual stream attachment (Hls.js / Native)
-  useEffect(() => {
-    if (!isDirectVideo || !videoUrl || !videoRef.current) return;
-    const video = videoRef.current;
-    
-    // Clean up previous Hls instance
-    if (hlsRef.current) {
-      hlsRef.current.destroy();
-      hlsRef.current = null;
-    }
-
-    const isHlsStream = videoUrl.toLowerCase().includes(".m3u8") || videoUrl.toLowerCase().includes("m3u8");
-
-    if (isHlsStream) {
-      if (Hls.isSupported()) {
-        const hls = new Hls({
-          enableWorker: true,
-          lowLatencyMode: true,
-        });
-        hls.loadSource(videoUrl);
-        hls.attachMedia(video);
-        hlsRef.current = hls;
-        hls.on(Hls.Events.ERROR, (_event, data) => {
-          if (data.fatal) {
-            switch (data.type) {
-              case Hls.ErrorTypes.NETWORK_ERROR:
-                console.log("[Hls.js] Fatal network error, trying to recover...");
-                hls.startLoad();
-                break;
-              case Hls.ErrorTypes.MEDIA_ERROR:
-                console.log("[Hls.js] Fatal media error, trying to recover...");
-                hls.recoverMediaError();
-                break;
-              default:
-                console.error("[Hls.js] Fatal error:", data);
-                setStreamError("Ошибка загрузки HLS стрима");
-                break;
-            }
-          }
-        });
-      } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-        // Native HLS support (Safari, iOS)
-        video.src = videoUrl;
-      } else {
-        setStreamError("Ваш браузер не поддерживает HLS потоки");
-      }
-    } else {
-      // Direct MP4 or other video format
-      video.src = videoUrl;
-    }
-
-    return () => {
-      if (hlsRef.current) {
-        hlsRef.current.destroy();
-        hlsRef.current = null;
-      }
-    };
-  }, [isDirectVideo, videoUrl]);
+  // Stream attachment is fully handled by UniversalPlayer
 
   // Sync playing prop dynamically with the direct video tag
   useEffect(() => {
@@ -949,9 +891,10 @@ export default function YoutubePlayer({
           <div ref={ytContainerRef} className="w-full h-full" />
         ) : isDirectVideo ? (
           <div className="w-full h-full bg-black rounded-xl overflow-hidden relative flex items-center justify-center">
-            <video
+            <UniversalPlayer
               ref={videoRef}
               id={playerIframeId}
+              src={videoUrl}
               controls={isHost}
               className="w-full h-full max-h-full max-w-full object-contain"
               onPlay={handleLocalPlay}

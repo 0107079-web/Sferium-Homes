@@ -25,7 +25,7 @@ export default function SyncTvDashboard({ isOpen, onClose }: SyncTvDashboardProp
   const [client, setClient] = useState<SyncTVClient | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<"disconnected" | "connecting" | "connected">("disconnected");
-  const [activeTab, setActiveTab] = useState<"tester" | "typescript" | "flutter" | "plyr" | "docs">("tester");
+  const [activeTab, setActiveTab] = useState<"tester" | "typescript" | "flutter" | "universal" | "docs">("tester");
   const [logs, setLogs] = useState<Array<{ id: string; time: string; type: string; text: string }>>([]);
   const [copiedStates, setCopiedStates] = useState<{ [key: string]: boolean }>({});
   
@@ -88,7 +88,7 @@ export default function SyncTvDashboard({ isOpen, onClose }: SyncTvDashboardProp
       room: roomId,
       password,
       videoUrl: testVideoUrl,
-      videoType: "plyr"
+      videoType: "universal"
     });
 
     if (createRes.success) {
@@ -391,58 +391,51 @@ class SyncTVService {
   }
 }`;
 
-  const plyrCode = `<!-- VideoPlayer Integration Suite (Plyr.io) -->
-<!-- Copy this template to build video sync rooms directly -->
+  const universalPlayerCode = `// UniversalPlayer Integration Component (React & TypeScript)
+import React, { useEffect, useRef } from "react";
+import Hls from "hls.js";
+import dashjs from "dashjs";
 
-<link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
-<script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+export default function UniversalPlayer({ src }) {
+  const videoRef = useRef(null);
 
-<div class="video-container">
-  <video id="player" playsinline controls data-poster="poster.jpg">
-    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" />
-  </video>
-</div>
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !src) return;
 
-<script>
-  const player = new Plyr('#player');
-  const syncService = new SyncTVService({
-    serverUrl: "http://185.125.103.34:8280",
-    roomId: "demo-room",
-    username: "DemoClient",
-    onStateUpdate: (isPlaying, time) => {
-      // Prevent infinite action cascades
-      const difference = Math.abs(player.currentTime - time);
-      
-      // Update local plyr player values
-      if (difference > 1.5) {
-        player.currentTime = time;
+    video.innerHTML = "";
+    video.src = "";
+
+    if (src.endsWith(".m3u8")) {
+      if (Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(src);
+        hls.attachMedia(video);
+      } else {
+        video.src = src;
       }
-      
-      if (isPlaying && player.paused) {
-        player.play();
-      } else if (!isPlaying && player.playing) {
-        player.pause();
-      }
+      return;
     }
-  });
 
-  syncService.connect();
+    if (src.endsWith(".mpd")) {
+      const player = dashjs.MediaPlayer().create();
+      player.initialize(video, src, true);
+      return;
+    }
 
-  // Bind Plyr Event Listeners and notify SyncTV
-  let isReceiving = false;
+    video.src = src;
+  }, [src]);
 
-  player.on('play', () => {
-    syncService.sendPlay(player.currentTime);
-  });
-
-  player.on('pause', () => {
-    syncService.sendPause(player.currentTime);
-  });
-
-  player.on('seeked', () => {
-    syncService.sendSeek(player.currentTime);
-  });
-</script>`;
+  return (
+    <video
+      ref={videoRef}
+      controls
+      autoPlay
+      playsInline
+      style={{ width: "100%", height: "100%", backgroundColor: "black" }}
+    />
+  );
+}`;
 
   return (
     <AnimatePresence>
@@ -524,9 +517,9 @@ class SyncTVService {
                 </button>
 
                 <button
-                  onClick={() => setActiveTab("plyr")}
+                  onClick={() => setActiveTab("universal")}
                   className={`w-full text-left px-3 py-2.5 rounded-xl text-sm flex items-center gap-2 transition ${
-                    activeTab === "plyr" 
+                    activeTab === "universal" 
                       ? "bg-indigo-600 font-medium text-white" 
                       : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60"
                   }`}
@@ -819,24 +812,24 @@ class SyncTVService {
                 )}
 
                 {/* 4. PLAYER INTEGRATION TAB */}
-                {activeTab === "plyr" && (
+                {activeTab === "universal" && (
                   <div className="space-y-4">
                     <div className="flex justify-between items-center bg-zinc-900 px-4 py-3 border border-zinc-800 rounded-xl">
                       <div>
-                        <h4 className="text-sm font-semibold text-zinc-100">Plyr / Video.js Integration Script</h4>
-                        <p className="text-xs text-zinc-400">Слушайте события запуска/паузы и обновляйте WebSocket с защитой от бесконечных эхо-петель.</p>
+                        <h4 className="text-sm font-semibold text-zinc-100">UniversalPlayer Integration Component</h4>
+                        <p className="text-xs text-zinc-400">Слушайте события запуска/паузы и обновляйте поток.</p>
                       </div>
                       <button
-                        onClick={() => handleCopy("plyr", plyrCode)}
+                        onClick={() => handleCopy("universal", universalPlayerCode)}
                         className="p-2 px-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white rounded-lg text-xs font-semibold transition flex items-center gap-1.5"
                       >
-                        {copiedStates["plyr"] ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                        {copiedStates["plyr"] ? "Скопировано!" : "Копировать"}
+                        {copiedStates["universal"] ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                        {copiedStates["universal"] ? "Скопировано!" : "Копировать"}
                       </button>
                     </div>
 
                     <pre className="p-4 bg-zinc-950 rounded-2xl overflow-x-auto text-[11px] font-mono leading-relaxed text-zinc-200 max-h-[50vh] border border-zinc-800/80">
-                      <code>{plyrCode}</code>
+                      <code>{universalPlayerCode}</code>
                     </pre>
                   </div>
                 )}
