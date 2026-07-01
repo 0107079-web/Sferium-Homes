@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     WS_ANTI_FLOOD_LIMIT: int = 20  # Messages per 5 seconds
 
     # Database Settings
+    DATABASE_URL: str = Field("", env="DATABASE_URL")
     POSTGRES_USER: str = Field("postgres", env="POSTGRES_USER")
     POSTGRES_PASSWORD: str = Field("postgres", env="POSTGRES_PASSWORD")
     POSTGRES_DB: str = Field("sferium_chat", env="POSTGRES_DB")
@@ -35,6 +36,13 @@ class Settings(BaseSettings):
 
     @property
     def postgres_url(self) -> str:
+        if self.DATABASE_URL:
+            url = self.DATABASE_URL
+            if url.startswith("postgresql://"):
+                url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+            elif url.startswith("postgres://"):
+                url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+            return url
         return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
     @property

@@ -1,0 +1,14 @@
+node_modules
+dist
+build
+.git
+.github
+*.log
+.env
+.env.*
+!.env.example
+package-lock.json
+*.local
+__pycache__
+*.pyc
+.DS_Store
