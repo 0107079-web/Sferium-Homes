@@ -6,7 +6,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Play, Pause, RefreshCw, Volume2, Info, Monitor, ExternalLink, HelpCircle, Lock, LogIn, Key, Settings, CheckCircle2, LogOut, Disc, Globe } from "lucide-react";
 import Hls from "hls.js";
-import { UniversalPlayer } from "./UniversalPlayer";
 
 declare global {
   interface Window {
@@ -186,6 +185,83 @@ export default function YoutubePlayer({
       setPlayerReady(true);
     }
   }, [isDirectVideo]);
+
+  // Handle actual stream attachment (Hls.js / Native)
+  useEffect(() => {
+    if (!isDirectVideo || !videoUrl || !videoRef.current) return;
+    const video = videoRef.current;
+    
+    // Clean up previous Hls instance
+    if (hlsRef.current) {
+      hlsRef.current.destroy();
+      hlsRef.current = null;
+    }
+
+    const isHlsStream = videoUrl.toLowerCase().includes(".m3u8") || videoUrl.toLowerCase().includes("m3u8");
+
+    if (isHlsStream) {
+      if (Hls.isSupported()) {
+        const hls = new Hls({
+          enableWorker: true,
+          lowLatencyMode: true,
+        });
+        hls.loadSource(videoUrl);
+        hls.attachMedia(video);
+        hlsRef.current = hls;
+        hls.on(Hls.Events.ERROR, (_event, data) => {
+          if (data.fatal) {
+            switch (data.type) {
+              case Hls.ErrorTypes.NETWORK_ERROR:
+                console.log("[Hls.js] Fatal network error, trying to recover...");
+                hls.startLoad();
+                break;
+              case Hls.ErrorTypes.MEDIA_ERROR:
+                console.log("[Hls.js] Fatal media error, trying to recover...");
+                hls.recoverMediaError();
+                break;
+              default:
+                console.error("[Hls.js] Fatal error:", data);
+                setStreamError("Ошибка загрузки HLS стрима");
+                break;
+            }
+          }
+        });
+      } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+        // Native HLS support (Safari, iOS)
+        video.src = videoUrl;
+      } else {
+        setStreamError("Ваш браузер не поддерживает HLS потоки");
+      }
+    } else {
+      // Direct MP4 or other video format
+      video.src = videoUrl;
+    }
+
+    return () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    };
+  }, [isDirectVideo, videoUrl]);
+
+  // Sync playing prop dynamically with the direct video tag
+  useEffect(() => {
+    if (!isDirectVideo || !videoRef.current || isRemoteStatusUpdate.current) return;
+    const video = videoRef.current;
+    
+    if (playing) {
+      if (video.paused) {
+        video.play().catch(err => {
+          console.warn("[Direct Video Autoplay Bypass] Initial play blocked or postponed:", err);
+        });
+      }
+    } else {
+      if (!video.paused) {
+        video.pause();
+      }
+    }
+  }, [isDirectVideo, playing]);
 
   // Periodic visual time synchronization tracking
   useEffect(() => {
@@ -872,20 +948,25 @@ export default function YoutubePlayer({
           */
           <div ref={ytContainerRef} className="w-full h-full" />
         ) : isDirectVideo ? (
-          <UniversalPlayer
-            ref={videoRef}
-            id={playerIframeId}
-            src={videoUrl || ""}
-            playing={playing}
-            isHost={isHost}
-            onPlay={handleLocalPlay}
-            onPause={handleLocalPause}
-            onSeeked={handleLocalSeeked}
-            onError={(err) => {
-              console.error("[UniversalPlayer Error]", err);
-              setStreamError("Прямой поток недоступен, используйте другой источник");
-            }}
-          />
+          <div className="w-full h-full bg-black rounded-xl overflow-hidden relative flex items-center justify-center">
+            <video
+              ref={videoRef}
+              id={playerIframeId}
+              controls={isHost}
+              className="w-full h-full max-h-full max-w-full object-contain"
+              onPlay={handleLocalPlay}
+              onPause={handleLocalPause}
+              onSeeked={handleLocalSeeked}
+              playsInline
+              preload="auto"
+              controlsList="nodownload"
+              style={{ pointerEvents: isHost ? "auto" : "none" }}
+              onError={(e) => {
+                console.error("[HTML5 Video Error]", e);
+                setStreamError("Прямой поток недоступен, используйте другой источник");
+              }}
+            />
+          </div>
         ) : (
           <iframe
             id={playerIframeId}

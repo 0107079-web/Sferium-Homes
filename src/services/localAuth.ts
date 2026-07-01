@@ -3,6 +3,8 @@
  * Fully independent of external servers and Firebase
  */
 
+import { getApiUrl } from "../apiConfig";
+
 export interface LocalUser {
   uid: string;
   email: string;
@@ -53,7 +55,7 @@ export async function registerLocalUser(
     throw new Error("Пожалуйста, заполните все обязательные поля");
   }
 
-  const response = await fetch("/api/auth/register", {
+  const response = await fetch(getApiUrl("/api/auth/register"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -90,7 +92,7 @@ export async function loginLocalUser(email: string, pass: string): Promise<Local
     throw new Error("Пожалуйста, заполните все поля");
   }
 
-  const response = await fetch("/api/auth/login", {
+  const response = await fetch(getApiUrl("/api/auth/login"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json"

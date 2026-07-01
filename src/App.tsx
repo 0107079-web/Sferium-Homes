@@ -22,6 +22,7 @@ import HomesPlatformsGrid from "./components/HomesPlatformsGrid";
 import MediaSelector from "./components/MediaSelector";
 import PlatformSelector from "./components/PlatformSelector";
 import sferiumLogo from "./assets/images/sferium_homes_logo_hummingbird_1781429704208.jpg";
+import { getApiUrl } from "./apiConfig";
 import { RoomState, WSMessage, ChatMessage, RoomMember, UserProfile } from "./types";
 import { 
   getCurrentUser, 
@@ -810,7 +811,7 @@ export default function App() {
             setIsAuthSubmitting(true);
             setAuthError(null);
             
-            const response = await fetch("/api/auth/vk-login", {
+            const response = await fetch(getApiUrl("/api/auth/vk-login"), {
               method: "POST",
               headers: {
                 "Content-Type": "application/json"
@@ -894,7 +895,7 @@ export default function App() {
           payload.userId = vkUserIdInput;
         }
 
-        const response = await fetch("/api/auth/vk-login", {
+        const response = await fetch(getApiUrl("/api/auth/vk-login"), {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -1524,7 +1525,7 @@ export default function App() {
 
     const fetchRooms = async () => {
       try {
-        const response = await fetch("/api/rooms-public");
+        const response = await fetch(getApiUrl("/api/rooms-public"));
         if (response.ok) {
           const data = await response.json();
           if (data && Array.isArray(data.rooms)) {
