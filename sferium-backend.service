@@ -1,0 +1,25 @@
+[Unit]
+Description=Sferium Homes Sync Server Backend (FastAPI)
+After=network.target postgresql.service redis-server.service
+
+[Service]
+# Имя пользователя, под которым будет запущен сервис (обычно www-data или ваш пользователь)
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/sferium
+
+# Путь к виртуальному окружению Python (venv) и запуск uvicorn
+Environment="PATH=/var/www/sferium/venv/bin"
+EnvironmentFile=/var/www/sferium/.env
+ExecStart=/var/www/sferium/venv/bin/uvicorn backend.main:app --host 127.0.0.1 --port 8000 --workers 4 --log-level info
+
+# Автоматический перезапуск при падении или сбое
+Restart=always
+RestartSec=5
+
+# Логирование стандартного вывода и ошибок
+StandardOutput=append:/var/log/sferium-backend.log
+StandardError=append:/var/log/sferium-backend.err.log
+
+[Install]
+WantedBy=multi-user.target
