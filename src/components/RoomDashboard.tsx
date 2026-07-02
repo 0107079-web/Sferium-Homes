@@ -878,9 +878,13 @@ export default function RoomDashboard({
                       
                       {/* Speaker Status Indicator */}
                       {member.micEnabled ? (
-                        <Mic className="w-3 h-3 text-emerald-450 shrink-0" title="Микрофон включен" />
+                        <span title="Микрофон включен" className="flex shrink-0">
+                          <Mic className="w-3 h-3 text-emerald-450" />
+                        </span>
                       ) : member.micBlockedByHost ? (
-                        <MicOff className="w-3 h-3 text-rose-500 shrink-0" title="Микрофон заблокирован создателем" />
+                        <span title="Микрофон заблокирован создателем" className="flex shrink-0">
+                          <MicOff className="w-3 h-3 text-rose-500" />
+                        </span>
                       ) : null}
                     </span>
                     <span className="text-[9px] text-zinc-505 font-mono">

@@ -499,13 +499,24 @@ export default function App() {
   // Handle loading session and guest setup
   useEffect(() => {
     // Load custom user or auto-fallback to guest (so they enter right away without gate screens)
-    const activeUser = getCurrentUser() || createGuestSession();
-    setCurrentUser(activeUser);
-    setNickName(activeUser.displayName);
-    setSelectedAvatar(activeUser.avatar);
-    setSelectedColor(activeUser.color);
-    setProfileReady(true);
-    setIsAuthLoading(false);
+    try {
+      const activeUser = getCurrentUser() || createGuestSession();
+      setCurrentUser(activeUser);
+      setNickName(activeUser?.displayName || "Зритель");
+      setSelectedAvatar(activeUser?.avatar || "🍿");
+      setSelectedColor(activeUser?.color || "#3B82F6");
+      setProfileReady(true);
+    } catch (err) {
+      console.error("Error initializing session, resetting to guest", err);
+      const guest = createGuestSession();
+      setCurrentUser(guest);
+      setNickName(guest.displayName);
+      setSelectedAvatar(guest.avatar);
+      setSelectedColor(guest.color);
+      setProfileReady(true);
+    } finally {
+      setIsAuthLoading(false);
+    }
   }, []);
 
 
