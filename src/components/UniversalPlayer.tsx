@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useImperativeHandle } from "react";
 import Hls from "hls.js";
-import dashjs from "dashjs";
+import MediaPlayer from "dashjs";
 
 interface UniversalPlayerProps extends React.VideoHTMLAttributes<HTMLVideoElement> {
   src?: string;
@@ -41,7 +41,7 @@ export const UniversalPlayer = React.forwardRef<HTMLVideoElement, UniversalPlaye
       }
 
       if (isDash) {
-        const player = dashjs.MediaPlayer().create();
+        const player = MediaPlayer().create();
         player.initialize(video, src, true);
         return;
       }
